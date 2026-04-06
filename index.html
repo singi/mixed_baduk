@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>삼합전: 바둑 오목 알까기</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="startOverlay" class="start-overlay">
+    <div class="start-card">
+      <p class="eyebrow">Hybrid Board Battle</p>
+      <h2>삼합전 시작</h2>
+      <p>모드를 고르면 바로 새 판이 열립니다. 혼자 연습하거나 2인 대전으로 바로 즐길 수 있어요.</p>
+      <div class="start-score">
+        <p class="label">승리 점수 선택</p>
+        <div class="start-score-options">
+          <label class="radio-chip">
+            <input type="radio" name="targetScore" value="7">
+            <span>7점</span>
+          </label>
+          <label class="radio-chip">
+            <input type="radio" name="targetScore" value="12" checked>
+            <span>12점</span>
+          </label>
+          <label class="radio-chip">
+            <input type="radio" name="targetScore" value="14">
+            <span>14점</span>
+          </label>
+        </div>
+      </div>
+      <div class="start-score">
+        <p class="label">AI 난이도</p>
+        <div class="start-score-options">
+          <label class="radio-chip">
+            <input type="radio" name="aiDifficulty" value="easy">
+            <span>쉬움</span>
+          </label>
+          <label class="radio-chip">
+            <input type="radio" name="aiDifficulty" value="normal" checked>
+            <span>보통</span>
+          </label>
+          <label class="radio-chip">
+            <input type="radio" name="aiDifficulty" value="hard">
+            <span>어려움</span>
+          </label>
+        </div>
+      </div>
+      <div class="start-actions">
+        <button id="startAiBtn" class="start-btn primary" type="button">흑 vs 백 AI</button>
+        <button id="startLocalBtn" class="start-btn" type="button">로컬 2인 플레이</button>
+      </div>
+    </div>
+  </div>
+  <div id="phaseBanner" class="phase-banner hidden">난전!! 알까기 가능!!</div>
+  <div id="victoryOverlay" class="victory-overlay hidden">
+    <div class="victory-card">
+      <div class="victory-burst"></div>
+      <div id="victoryStone" class="victory-stone"></div>
+      <p id="victoryText" class="victory-text">승리!!</p>
+      <p id="victorySubtext" class="victory-subtext">완벽한 마무리</p>
+      <div class="victory-actions">
+        <button id="victoryRematchBtn" class="start-btn primary" type="button">같은 설정으로 다시</button>
+        <button id="victoryMenuBtn" class="start-btn" type="button">시작 메뉴</button>
+      </div>
+    </div>
+  </div>
+  <main class="shell">
+    <section class="hero">
+      <h1>삼합전</h1>
+      <p class="subtitle">바둑의 따내기, 오목의 5목, 알까기의 밀어내기를 한 판에 묶은 혼합 전략 게임</p>
+    </section>
+
+    <section class="layout">
+      <aside class="panel">
+        <div class="status-card">
+          <p class="label">현재 턴</p>
+          <p id="turnText" class="turn-text">흑</p>
+          <p id="statusText" class="status-text">빈 교차점에 돌을 놓거나, 내 돌을 드래그해 알까기를 시도하세요.</p>
+        </div>
+
+        <div class="mode-card">
+          <p class="label">행동 선택</p>
+          <div class="mode-buttons">
+            <button id="placeBtn" class="mode-btn active" type="button">놓기</button>
+            <div class="flick-mode-wrap">
+              <button id="flickBtn" class="mode-btn" type="button">알까기</button>
+              <p id="flickReadyText" class="flick-ready-text">난전 대기</p>
+            </div>
+          </div>
+          <p class="hint">알까기 모드에서는 돌이 선에 묶이지 않고 미끄러지며, 멈춘 뒤 가장 가까운 교차점에 다시 붙습니다.</p>
+        </div>
+
+        <div class="status-card compact">
+          <p class="label">대전 설정</p>
+          <label class="toggle-row">
+            <input id="aiToggle" type="checkbox" checked>
+            <span>백 AI 자동 플레이</span>
+          </label>
+          <p class="hint">AI는 5목, 따내기, 위험 차단을 우선으로 두는 가벼운 전략을 사용합니다.</p>
+        </div>
+
+        <div class="status-card compact">
+          <p class="label">알까기 세팅</p>
+          <label class="toggle-row">
+            <input id="flickSettingsToggle" type="checkbox">
+            <span>알까기 세팅 보기</span>
+          </label>
+          <div id="flickSettingsPanel" class="flick-settings-panel hidden">
+            <label class="slider-row" for="powerSlider">
+              <span>발사 세기</span>
+              <strong id="powerValue">1.0x</strong>
+            </label>
+            <input id="powerSlider" class="slider" type="range" min="0.6" max="1.8" step="0.1" value="1.0">
+            <label class="slider-row" for="bounceSlider">
+              <span>튕김 강도</span>
+              <strong id="bounceValue">0.92</strong>
+            </label>
+            <input id="bounceSlider" class="slider" type="range" min="0.5" max="1.2" step="0.05" value="0.92">
+            <label class="slider-row" for="frictionSlider">
+              <span>마찰</span>
+              <strong id="frictionValue">0.985</strong>
+            </label>
+            <input id="frictionSlider" class="slider" type="range" min="0.94" max="0.995" step="0.005" value="0.985">
+          </div>
+        </div>
+
+        <div class="score-card">
+          <div class="score-row">
+            <span>흑 돌</span>
+            <strong id="blackCount">0</strong>
+          </div>
+          <div class="score-row">
+            <span>백 돌</span>
+            <strong id="whiteCount">0</strong>
+          </div>
+          <div class="score-row">
+            <span>잡힌 돌</span>
+            <strong id="captureText">흑 0 / 백 0</strong>
+          </div>
+          <div class="score-row">
+            <span>점수</span>
+            <strong id="scoreText">흑 0 / 백 0</strong>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="undoBtn" class="undo-btn" type="button">한 수 되돌리기</button>
+          <button id="resetBtn" class="reset-btn" type="button">시작 메뉴</button>
+        </div>
+
+        <div class="status-card compact">
+          <p class="label">턴 로그</p>
+          <label class="toggle-row">
+            <input id="turnLogToggle" type="checkbox">
+            <span>턴 로그 보기</span>
+          </label>
+          <div id="turnLogPanel" class="flick-settings-panel hidden">
+            <div id="logList" class="log-list">
+              <p class="log-empty">아직 기록이 없습니다.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="board-area">
+        <section class="board-main">
+          <section class="board-wrap">
+            <canvas id="gameCanvas" width="860" height="860" aria-label="삼합전 게임판"></canvas>
+            <div id="boardTooltip" class="board-tip dynamic-tip hidden"></div>
+            <div id="flickControls" class="flick-controls hidden">
+              <button data-dir="up" type="button">↑</button>
+              <div class="middle-row">
+                <button data-dir="left" type="button">←</button>
+                <button data-dir="right" type="button">→</button>
+              </div>
+              <button data-dir="down" type="button">↓</button>
+            </div>
+          </section>
+
+          <section class="gauge-panel">
+            <div class="gauge-card black">
+              <div class="gauge-head">
+                <span>흑 알까기 게이지</span>
+                <strong id="blackGaugeValue">0 / 100</strong>
+              </div>
+              <div class="gauge-track">
+                <div id="blackGaugeFill" class="gauge-fill black"></div>
+              </div>
+            </div>
+            <div class="gauge-card white">
+              <div class="gauge-head">
+                <span>백 알까기 게이지</span>
+                <strong id="whiteGaugeValue">0 / 100</strong>
+              </div>
+              <div class="gauge-track">
+                <div id="whiteGaugeFill" class="gauge-fill white"></div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <aside class="board-sidecard legend">
+          <p class="label">승리 조건</p>
+          <label class="toggle-row">
+            <input id="rulesToggle" type="checkbox">
+            <span>승리 조건 보기</span>
+          </label>
+          <div id="rulesPanel" class="flick-settings-panel hidden">
+            <ul>
+              <li>시작 시 선택한 승리 점수를 먼저 얻으면 승리합니다.</li>
+              <li>5목 완성은 즉시 승리이면서 4점을 줍니다.</li>
+            </ul>
+            <p class="label">혼합 규칙</p>
+            <ul>
+              <li>놓기는 바둑처럼 활로가 없는 상대 돌을 따내며, 돌 하나당 1점입니다.</li>
+              <li>오프닝 6수 동안은 놓기만 가능하고, 이후 알까기가 해금됩니다.</li>
+              <li>알까기는 게이지가 100일 때만 사용할 수 있고, 사용 후 게이지를 소비합니다.</li>
+              <li>흑은 6목, 쌍삼, 쌍사를 금수로 취급합니다.</li>
+              <li>직전과 같은 판 모양으로 되돌아가는 수는 패로 금지합니다.</li>
+              <li>알까기로 판 밖으로 떨어진 상대 돌도 하나당 1점입니다.</li>
+              <li>알까기는 자유 각도로 굴러가며 충돌하고, 판에 남은 돌은 가장 가까운 교차점에 정렬됩니다.</li>
+              <li>중앙 왕점은 +1점, 화점은 알까기 충전 보너스를 줍니다.</li>
+              <li>따내기, 탈락, 5목을 한 수에 겹치면 콤보 보너스를 얻습니다.</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
