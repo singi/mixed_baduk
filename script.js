@@ -17,6 +17,7 @@ const whiteGaugeValue = document.getElementById("whiteGaugeValue");
 const blackGaugeFill = document.getElementById("blackGaugeFill");
 const whiteGaugeFill = document.getElementById("whiteGaugeFill");
 const boardTooltip = document.getElementById("boardTooltip");
+const boardWrap = document.querySelector(".board-wrap");
 const placeBtn = document.getElementById("placeBtn");
 const flickBtn = document.getElementById("flickBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -349,16 +350,16 @@ function countStones(board) {
 function resizeCanvas() {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const sideWidth = viewportWidth > 1040 ? 380 : 0;
-  const reservedWidth = viewportWidth > 1040 ? 520 + sideWidth : 80;
-  const maxByWidth = Math.min(1180, Math.max(260, viewportWidth - reservedWidth));
-  const maxByHeight = Math.min(1180, Math.max(260, viewportHeight - 180));
-  const size = Math.round(Math.max(260, Math.min(maxByWidth, maxByHeight)));
+  const wrapWidth = boardWrap
+    ? Math.max(220, Math.floor(boardWrap.getBoundingClientRect().width - 36))
+    : Math.max(220, viewportWidth - 48);
+  const maxByHeight = Math.min(1180, Math.max(220, viewportHeight - (viewportWidth <= 640 ? 260 : 180)));
+  const size = Math.round(Math.max(220, Math.min(wrapWidth, maxByHeight)));
 
   canvas.width = size;
   canvas.height = size;
 
-  padding = Math.max(48, Math.round(size * 0.084));
+  padding = Math.max(28, Math.round(size * 0.084));
   boardSpan = canvas.width - padding * 2;
   cell = boardSpan / (BOARD_SIZE - 1);
   boardMin = padding;
@@ -1180,9 +1181,10 @@ function simulateFlick(board, x, y, shotVector, player, previousHash) {
   const knockedOutEnemy = flickState.knockedOut[getOpponent(player)] > 0;
   const pointsGivenToOpponent = flickState.knockedOut[player];
   const lineBonus = getWinnerPlayer(boardCopy) === player ? 4 : 0;
-  const crownBonus = isCrownPoint(snapResult.focus.x, snapResult.focus.y) ? 1 : 0;
+  const shooterSurvived = Boolean(snapResult.focus);
+  const crownBonus = shooterSurvived && isCrownPoint(snapResult.focus.x, snapResult.focus.y) ? 1 : 0;
   const comboBonus = getComboBonus([capturedByCurrent, flickState.knockedOut[getOpponent(player)], lineBonus]);
-  const chargeGain = getChargeGain("flick", snapResult.focus.x, snapResult.focus.y);
+  const chargeGain = shooterSurvived ? getChargeGain("flick", snapResult.focus.x, snapResult.focus.y) : 0;
   const totalPoints = capturedByCurrent + flickState.knockedOut[getOpponent(player)] + lineBonus + crownBonus + comboBonus;
 
   const hash = serializeBoard(boardCopy);
@@ -1216,8 +1218,8 @@ function simulateFlick(board, x, y, shotVector, player, previousHash) {
           + (player === "white" ? totalPoints : pointsGivenToOpponent),
       },
     }),
-    endX: snapResult.focus.x,
-    endY: snapResult.focus.y,
+    endX: snapResult.focus?.x ?? x,
+    endY: snapResult.focus?.y ?? y,
     animationStones: flickState.frames,
     animationEvents: flickState.events,
   };
@@ -1620,9 +1622,7 @@ function snapPhysicsToBoard(stones, preferredId) {
   const preferred = snapped.find((stone) => stone.id === preferredId);
   const focus = preferred
     ? { x: preferred.gx, y: preferred.gy }
-    : snapped[0]
-      ? { x: snapped[0].gx, y: snapped[0].gy }
-      : { x: 5, y: 5 };
+    : null;
 
   return { board, focus };
 }

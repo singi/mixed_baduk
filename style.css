@@ -22,6 +22,7 @@ body {
   min-height: 100vh;
   font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Nanum Gothic", sans-serif;
   color: var(--text);
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 244, 214, 0.95), transparent 26%),
     radial-gradient(circle at bottom right, rgba(120, 59, 18, 0.2), transparent 30%),
@@ -663,8 +664,13 @@ canvas {
     grid-template-columns: 1fr;
   }
 
+  .panel {
+    order: 2;
+  }
+
   .board-area {
     grid-template-columns: 1fr;
+    order: 1;
   }
 
   .gauge-panel {
@@ -682,21 +688,135 @@ canvas {
     padding-top: 18px;
   }
 
+  .hero {
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.2rem, 12vw, 3.3rem);
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
   .status-card,
   .mode-card,
   .legend,
   .score-card {
     border-radius: 18px;
+    padding: 15px;
   }
 
   .flick-controls {
     position: static;
     margin-top: 14px;
+    width: 100%;
   }
 
   .start-actions,
   .action-row,
   .victory-actions {
     grid-template-columns: 1fr;
+  }
+
+  .start-card {
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .start-score-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .radio-chip span {
+    padding: 11px 8px;
+    font-size: 0.92rem;
+  }
+
+  .mode-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .action-row {
+    gap: 8px;
+  }
+
+  .score-row,
+  .gauge-head {
+    font-size: 0.92rem;
+  }
+
+  .board-wrap {
+    padding: 10px;
+    border-radius: 22px;
+  }
+
+  canvas {
+    border-radius: 20px;
+  }
+
+  .gauge-card {
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .flick-controls button,
+  .middle-row {
+    width: 100%;
+  }
+
+  .middle-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flick-controls button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .phase-banner {
+    width: min(92vw, 520px);
+    padding: 18px 16px;
+    text-align: center;
+  }
+
+  .victory-card {
+    width: min(92vw, 420px);
+    gap: 14px;
+  }
+
+  .victory-subtext {
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .shell {
+    width: min(100% - 14px, 1240px);
+    padding-top: 14px;
+  }
+
+  .turn-text {
+    font-size: 1.7rem;
+  }
+
+  .status-text,
+  .hint,
+  .legend li,
+  .toggle-row span,
+  .log-item,
+  .log-empty {
+    font-size: 0.88rem;
+  }
+
+  .board-wrap {
+    padding: 8px;
+  }
+
+  .gauge-panel {
+    gap: 10px;
   }
 }
