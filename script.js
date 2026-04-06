@@ -35,6 +35,7 @@ const rulesPanel = document.getElementById("rulesPanel");
 const startOverlay = document.getElementById("startOverlay");
 const victoryOverlay = document.getElementById("victoryOverlay");
 const victoryStone = document.getElementById("victoryStone");
+const victoryStoneCtx = victoryStone.getContext("2d");
 const victoryText = document.getElementById("victoryText");
 const victorySubtext = document.getElementById("victorySubtext");
 const victoryRematchBtn = document.getElementById("victoryRematchBtn");
@@ -120,6 +121,7 @@ function createInitialState() {
     turnLog: [],
     drag: {
       active: false,
+      flickShortcut: false,
       startPx: null,
       currentPx: null,
       stone: null,
@@ -234,8 +236,7 @@ function syncUi() {
 }
 
 function showVictoryOverlay(winnerPlayer) {
-  victoryStone.classList.remove("black", "white");
-  victoryStone.classList.add(winnerPlayer);
+  renderVictoryStone(winnerPlayer);
   victoryText.textContent = `${winnerPlayer === "black" ? "흑" : "백"} 승리!!`;
   victorySubtext.textContent = state.aiEnabled
     ? `${state.aiDifficulty === "easy" ? "쉬움" : state.aiDifficulty === "hard" ? "어려움" : "보통"} AI 규칙으로 완료`
@@ -248,6 +249,79 @@ function showVictoryOverlay(winnerPlayer) {
 
 function hideVictoryOverlay() {
   victoryOverlay.classList.add("hidden");
+}
+
+function renderVictoryStone(color) {
+  const size = victoryStone.width;
+  const center = size / 2;
+  const radius = size * 0.37;
+
+  victoryStoneCtx.clearRect(0, 0, size, size);
+
+  const shadowGradient = victoryStoneCtx.createRadialGradient(
+    center + radius * 0.18,
+    center + radius * 0.28,
+    radius * 0.2,
+    center,
+    center,
+    radius * 1.35,
+  );
+  shadowGradient.addColorStop(0, "rgba(42, 20, 6, 0.22)");
+  shadowGradient.addColorStop(1, "rgba(42, 20, 6, 0)");
+
+  victoryStoneCtx.beginPath();
+  victoryStoneCtx.arc(center + radius * 0.08, center + radius * 0.12, radius * 1.08, 0, Math.PI * 2);
+  victoryStoneCtx.fillStyle = shadowGradient;
+  victoryStoneCtx.fill();
+
+  const gradient = victoryStoneCtx.createRadialGradient(
+    center - radius * 0.34,
+    center - radius * 0.42,
+    radius * 0.16,
+    center,
+    center,
+    radius,
+  );
+  if (color === "black") {
+    gradient.addColorStop(0, "#9a9a9a");
+    gradient.addColorStop(0.18, "#555555");
+    gradient.addColorStop(0.58, "#1c1c1c");
+    gradient.addColorStop(1, "#050505");
+  } else {
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.28, "#fffaf0");
+    gradient.addColorStop(0.68, "#e7ddd0");
+    gradient.addColorStop(1, "#b7ab99");
+  }
+
+  victoryStoneCtx.beginPath();
+  victoryStoneCtx.arc(center, center, radius, 0, Math.PI * 2);
+  victoryStoneCtx.fillStyle = gradient;
+  victoryStoneCtx.fill();
+
+  const rimGradient = victoryStoneCtx.createLinearGradient(center, center - radius, center, center + radius);
+  if (color === "black") {
+    rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+    rimGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.02)");
+    rimGradient.addColorStop(1, "rgba(0, 0, 0, 0.4)");
+  } else {
+    rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.92)");
+    rimGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.2)");
+    rimGradient.addColorStop(1, "rgba(126, 112, 86, 0.34)");
+  }
+  victoryStoneCtx.strokeStyle = rimGradient;
+  victoryStoneCtx.lineWidth = Math.max(3, radius * 0.1);
+  victoryStoneCtx.stroke();
+
+  victoryStoneCtx.beginPath();
+  victoryStoneCtx.arc(center - radius * 0.28, center - radius * 0.34, Math.max(4, radius * 0.24), 0, Math.PI * 2);
+  victoryStoneCtx.fillStyle = color === "black" ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.82)";
+  victoryStoneCtx.fill();
+
+  victoryStoneCtx.beginPath();
+  victoryStoneCtx.arc(center - radius * 0.06, center - radius * 0.14, Math.max(3, radius * 0.12), 0, Math.PI * 2);
+  victoryStoneCtx.fillStyle = color === "black" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.5)";
+  victoryStoneCtx.fill();
 }
 
 function rematchGame() {
@@ -672,6 +746,19 @@ function handlePointerDown(event) {
   }
 
   if (state.mode === "place") {
+    if (canUseFlick(state.currentPlayer) && state.board[y][x] === state.currentPlayer) {
+      state.selectedStone = { x, y };
+      state.drag.active = true;
+      state.drag.flickShortcut = true;
+      state.drag.stone = { x, y };
+      state.drag.startPx = cellCenter(x, y);
+      state.drag.currentPx = position;
+      state.message = "알까기 가능 상태라서 내 돌을 바로 드래그해 알까기를 시작합니다.";
+      canvas.setPointerCapture(event.pointerId);
+      syncUi();
+      draw();
+      return;
+    }
     attemptPlace(x, y, { source: "human" });
     return;
   }
@@ -726,10 +813,13 @@ function handlePointerUp(event) {
   }
 
   if (shotVector) {
-    performFlick(shotVector, { source: "human" });
+    const bypassMode = state.drag.flickShortcut;
+    state.drag.flickShortcut = false;
+    performFlick(shotVector, { source: "human", bypassMode });
   } else {
     state.message = "드래그 거리가 짧아서 알까기가 취소됐습니다.";
     state.selectedStone = null;
+    state.drag.flickShortcut = false;
     syncUi();
     draw();
   }
@@ -810,7 +900,8 @@ function attemptPlace(x, y, options = {}) {
 
 async function performFlick(directionOrVector, options = {}) {
   const source = options.source ?? "human";
-  if (state.winner || state.mode !== "flick" || !state.selectedStone) {
+  const bypassMode = options.bypassMode ?? false;
+  if (state.winner || (!(state.mode === "flick" || bypassMode)) || !state.selectedStone) {
     return false;
   }
   if (!canUseFlick(state.currentPlayer)) {
