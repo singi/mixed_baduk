@@ -18,6 +18,10 @@ const blackGaugeFill = document.getElementById("blackGaugeFill");
 const whiteGaugeFill = document.getElementById("whiteGaugeFill");
 const boardTooltip = document.getElementById("boardTooltip");
 const boardWrap = document.querySelector(".board-wrap");
+const panel = document.querySelector(".panel");
+const boardMain = document.querySelector(".board-main");
+const gaugePanel = document.querySelector(".gauge-panel");
+const modeCard = document.querySelector(".panel-mode-card");
 const placeBtn = document.getElementById("placeBtn");
 const flickBtn = document.getElementById("flickBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -75,6 +79,7 @@ let boardMin = padding;
 let boardMax = canvas.width - padding;
 let dragThreshold = cell * 0.45;
 let stoneRadius = 26;
+let modeCardPlaceholder = null;
 
 const forgePoints = [
   [3, 3],
@@ -136,6 +141,28 @@ function resetGame() {
   resizeCanvas();
   syncUi();
   draw();
+}
+
+function syncResponsiveLayout() {
+  if (!modeCard || !panel || !boardMain || !gaugePanel) {
+    return;
+  }
+
+  if (!modeCardPlaceholder) {
+    modeCardPlaceholder = document.createComment("mode-card-placeholder");
+    panel.insertBefore(modeCardPlaceholder, modeCard.nextSibling);
+  }
+
+  if (window.innerWidth <= 640) {
+    if (modeCard.parentElement !== boardMain) {
+      boardMain.insertBefore(modeCard, gaugePanel);
+    }
+    return;
+  }
+
+  if (modeCard.parentElement !== panel) {
+    panel.insertBefore(modeCard, modeCardPlaceholder);
+  }
 }
 
 function startGame(withAi) {
@@ -348,6 +375,7 @@ function countStones(board) {
 }
 
 function resizeCanvas() {
+  syncResponsiveLayout();
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const wrapWidth = boardWrap
@@ -507,25 +535,70 @@ function drawStone(x, y, color) {
 
 function drawStoneAt(px, py, color) {
   const radius = stoneRadius;
+  const shadowGradient = ctx.createRadialGradient(
+    px + radius * 0.18,
+    py + radius * 0.28,
+    radius * 0.2,
+    px,
+    py,
+    radius * 1.35,
+  );
+  shadowGradient.addColorStop(0, "rgba(42, 20, 6, 0.22)");
+  shadowGradient.addColorStop(1, "rgba(42, 20, 6, 0)");
 
-  const gradient = ctx.createRadialGradient(px - 9, py - 11, 7, px, py, radius);
+  ctx.beginPath();
+  ctx.arc(px + radius * 0.08, py + radius * 0.12, radius * 1.08, 0, Math.PI * 2);
+  ctx.fillStyle = shadowGradient;
+  ctx.fill();
+
+  const gradient = ctx.createRadialGradient(
+    px - radius * 0.34,
+    py - radius * 0.42,
+    radius * 0.16,
+    px,
+    py,
+    radius,
+  );
   if (color === "black") {
-    gradient.addColorStop(0, "#6d6d6d");
-    gradient.addColorStop(0.35, "#2d2d2d");
-    gradient.addColorStop(1, "#0d0d0d");
+    gradient.addColorStop(0, "#9a9a9a");
+    gradient.addColorStop(0.18, "#555555");
+    gradient.addColorStop(0.58, "#1c1c1c");
+    gradient.addColorStop(1, "#050505");
   } else {
     gradient.addColorStop(0, "#ffffff");
-    gradient.addColorStop(0.65, "#f1ece2");
-    gradient.addColorStop(1, "#cbc2b3");
+    gradient.addColorStop(0.28, "#fffaf0");
+    gradient.addColorStop(0.68, "#e7ddd0");
+    gradient.addColorStop(1, "#b7ab99");
   }
 
   ctx.beginPath();
   ctx.arc(px, py, radius, 0, Math.PI * 2);
   ctx.fillStyle = gradient;
   ctx.fill();
-  ctx.strokeStyle = color === "black" ? "rgba(0,0,0,0.65)" : "rgba(120, 106, 82, 0.7)";
-  ctx.lineWidth = 2;
+
+  const rimGradient = ctx.createLinearGradient(px, py - radius, px, py + radius);
+  if (color === "black") {
+    rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.12)");
+    rimGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.02)");
+    rimGradient.addColorStop(1, "rgba(0, 0, 0, 0.4)");
+  } else {
+    rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.92)");
+    rimGradient.addColorStop(0.48, "rgba(255, 255, 255, 0.2)");
+    rimGradient.addColorStop(1, "rgba(126, 112, 86, 0.34)");
+  }
+  ctx.strokeStyle = rimGradient;
+  ctx.lineWidth = Math.max(1.2, radius * 0.1);
   ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(px - radius * 0.28, py - radius * 0.34, Math.max(2, radius * 0.24), 0, Math.PI * 2);
+  ctx.fillStyle = color === "black" ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.82)";
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(px - radius * 0.06, py - radius * 0.14, Math.max(1.4, radius * 0.12), 0, Math.PI * 2);
+  ctx.fillStyle = color === "black" ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.5)";
+  ctx.fill();
 }
 
 function drawDragGuide() {

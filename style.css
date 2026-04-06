@@ -85,17 +85,57 @@ body {
   width: min(220px, 38vw);
   aspect-ratio: 1;
   border-radius: 50%;
-  box-shadow: 0 28px 60px rgba(24, 10, 3, 0.34);
+  box-shadow:
+    0 28px 60px rgba(24, 10, 3, 0.34),
+    inset -16px -20px 30px rgba(0, 0, 0, 0.2),
+    inset 12px 14px 22px rgba(255, 255, 255, 0.12);
   animation: victoryBob 1.8s ease-in-out infinite;
 }
 
+.victory-stone::before,
+.victory-stone::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.victory-stone::before {
+  inset: 16% auto auto 18%;
+  width: 28%;
+  height: 22%;
+  filter: blur(1px);
+}
+
+.victory-stone::after {
+  inset: 28% auto auto 34%;
+  width: 11%;
+  height: 9%;
+}
+
 .victory-stone.black {
-  background: radial-gradient(circle at 34% 28%, #7f7f7f 0%, #2f2f2f 42%, #090909 100%);
+  background: radial-gradient(circle at 34% 26%, #9a9a9a 0%, #555555 18%, #1c1c1c 58%, #050505 100%);
+}
+
+.victory-stone.black::before {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.victory-stone.black::after {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .victory-stone.white {
-  background: radial-gradient(circle at 34% 28%, #ffffff 0%, #f3eee4 56%, #c6bcad 100%);
-  border: 2px solid rgba(120, 106, 82, 0.45);
+  background: radial-gradient(circle at 34% 26%, #ffffff 0%, #fffaf0 30%, #e7ddd0 70%, #b7ab99 100%);
+  border: 2px solid rgba(120, 106, 82, 0.34);
+}
+
+.victory-stone.white::before {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.victory-stone.white::after {
+  background: rgba(255, 255, 255, 0.52);
 }
 
 .victory-text {
@@ -712,10 +752,6 @@ canvas {
     order: 6;
   }
 
-  .panel-mode-card {
-    order: 7;
-  }
-
   .shell {
     width: min(100% - 20px, 1240px);
     padding-top: 18px;
@@ -785,6 +821,10 @@ canvas {
   .board-wrap {
     padding: 10px;
     border-radius: 22px;
+  }
+
+  .board-main > .panel-mode-card {
+    margin-top: 4px;
   }
 
   canvas {
