@@ -683,6 +683,39 @@ canvas {
 }
 
 @media (max-width: 640px) {
+  .panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-turn-card {
+    order: 1;
+  }
+
+  .panel-ai-card {
+    order: 2;
+  }
+
+  .panel-flick-settings-card {
+    order: 3;
+  }
+
+  .panel-score-card {
+    order: 4;
+  }
+
+  .panel-action-row {
+    order: 5;
+  }
+
+  .panel-log-card {
+    order: 6;
+  }
+
+  .panel-mode-card {
+    order: 7;
+  }
+
   .shell {
     width: min(100% - 20px, 1240px);
     padding-top: 18px;
